@@ -10,7 +10,7 @@
 //
 //  import (
 //      "fmt"
-//      "github.com/julienschmidt/httprouter"
+//      "github.com/audibleblink/httprouter"
 //      "net/http"
 //      "log"
 //  )
@@ -78,6 +78,7 @@ package httprouter
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -203,6 +204,11 @@ type Router struct {
 	// The handler can be used to keep your server from crashing because of
 	// unrecovered panics.
 	PanicHandler func(http.ResponseWriter, *http.Request, interface{})
+
+	// Namespace is the prefix for all handled requests
+	// Example: GET("/bar", barHandler) when Namespace "foo" is set
+	// will be served at /foo/bar
+	Namespace string
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -319,6 +325,9 @@ func (r *Router) Handle(method, path string, handle Handle) {
 		r.globalAllowed = r.allowed("*", "")
 	}
 
+	if r.Namespace != "" {
+		path = fmt.Sprintf("/%s%s", r.Namespace, path)
+	}
 	root.addRoute(path, handle)
 
 	// Update maxParams
